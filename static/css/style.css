@@ -52,6 +52,31 @@
     /* Transition Settings */
     --transition-fast: 0.15s ease;
     --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Textarea & Code Block Variables */
+    --bg-code: rgba(0, 0, 0, 0.3);
+    --text-code: #e2e8f0;
+    --bg-textarea: rgba(0, 0, 0, 0.2);
+}
+
+/* Light Theme Variable Overrides */
+body.light-theme {
+    --bg-base: #f1f5f9;
+    --bg-surface: #ffffff;
+    --bg-surface-hover: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-card-selected: #e2e8f0;
+    --border-color: #cbd5e1;
+    --border-selected: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    
+    --primary-glow: rgba(59, 130, 246, 0.08);
+    --bg-code: #f1f5f9;
+    --text-code: #0f172a;
+    --bg-textarea: #f8fafc;
 }
 
 /* ==========================================================================
@@ -607,13 +632,13 @@ body {
 }
 
 .card-content code {
-    background-color: rgba(0, 0, 0, 0.3);
-    color: #e2e8f0;
+    background-color: var(--bg-code);
+    color: var(--text-code);
     font-family: var(--font-mono);
     font-size: 13px;
     padding: 2px 6px;
     border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
 }
 
 .card-content ul {
@@ -742,7 +767,7 @@ body {
 
 .tweet-edit-container textarea {
     width: 100%;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: var(--bg-textarea);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
     color: var(--text-primary);
@@ -757,7 +782,7 @@ body {
 .tweet-edit-container textarea:focus {
     outline: none;
     border-color: var(--primary);
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: var(--bg-textarea);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
@@ -1002,3 +1027,152 @@ body {
         max-width: 100%;
     }
 }
+
+/* ==========================================================================
+   Utility Features: Theme Switch, Export, & Copy to Clipboard
+   ========================================================================== */
+
+/* Theme Toggle Switch */
+.theme-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 12px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: var(--border-radius-md);
+}
+
+.toggle-icon {
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    transition: color var(--transition-fast);
+}
+
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 18px;
+}
+
+.theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.theme-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-base);
+    border: 1px solid var(--border-color);
+    transition: .3s ease;
+    border-radius: 20px;
+}
+
+.theme-slider:before {
+    position: absolute;
+    content: "";
+    height: 10px;
+    width: 10px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-secondary);
+    transition: .3s ease;
+    border-radius: 50%;
+}
+
+input:checked + .theme-slider {
+    background-color: var(--primary-glow);
+    border-color: var(--primary);
+}
+
+input:checked + .theme-slider:before {
+    transform: translateX(18px);
+    background-color: var(--primary);
+}
+
+body.light-theme .sun-icon {
+    color: #f59e0b;
+}
+
+body:not(.light-theme) .moon-icon {
+    color: var(--secondary);
+}
+
+/* Export CSV Button */
+.btn-export {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--bg-surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    padding: 10px 16px;
+    border-radius: var(--border-radius-md);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-right: 12px;
+}
+
+.btn-export:hover {
+    background-color: var(--bg-surface-hover);
+    color: var(--text-primary);
+    border-color: var(--text-muted);
+}
+
+.btn-export:active {
+    transform: scale(0.98);
+}
+
+/* Card Actions Container */
+.card-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Copy Card Button */
+.btn-copy-card {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-copy-card:hover {
+    background-color: var(--bg-surface-hover);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.btn-copy-card:active {
+    transform: scale(0.95);
+}
+
+/* Clipboard checkmark animation */
+.btn-copy-card.copied {
+    background-color: var(--tag-feature-bg);
+    color: var(--tag-feature);
+    border-color: var(--tag-feature);
+}
+

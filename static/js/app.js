@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnShareTweet = document.getElementById('btn-share-tweet');
     const composerBadge = document.querySelector('.composer-badge');
     const sharingSection = document.querySelector('.sharing-section');
+    const themeCheckbox = document.getElementById('theme-checkbox');
+    const btnExport = document.getElementById('btn-export');
 
     // Add close button for mobile drawer dynamically
     const sharingHeader = document.querySelector('.sharing-header');
@@ -205,6 +207,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     badge.textContent = update.type;
                     cardHeader.appendChild(badge);
 
+                    // Actions Container
+                    const actionsContainer = document.createElement('div');
+                    actionsContainer.className = 'card-header-actions';
+
+                    // Copy to Clipboard Button
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'btn-copy-card';
+                    copyBtn.title = 'Copy raw update text to clipboard';
+                    copyBtn.innerHTML = `Copy <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`;
+                    
+                    copyBtn.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent card selection when copying
+                        navigator.clipboard.writeText(update.text).then(() => {
+                            // Temporary UI feedback
+                            copyBtn.classList.add('copied');
+                            copyBtn.innerHTML = `Copied! <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                            
+                            setTimeout(() => {
+                                copyBtn.classList.remove('copied');
+                                copyBtn.innerHTML = `Copy <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`;
+                            }, 1500);
+                        }).catch(err => {
+                            console.error('Failed to copy text: ', err);
+                        });
+                    });
+
                     // Selection / Tweet button
                     const selectBtn = document.createElement('button');
                     selectBtn.className = 'btn-select-update';
@@ -219,7 +247,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         selectUpdate(update, group);
                     });
                     
-                    cardHeader.appendChild(selectBtn);
+                    actionsContainer.appendChild(copyBtn);
+                    actionsContainer.appendChild(selectBtn);
+                    cardHeader.appendChild(actionsContainer);
                     card.appendChild(cardHeader);
 
                     // Card Content
@@ -459,6 +489,77 @@ document.addEventListener('DOMContentLoaded', () => {
         renderNotes();
         searchInput.focus();
     });
+
+    // ==========================================================================
+    // Theme Switch & CSV Export Functions
+    // ==========================================================================
+    
+    // Theme initialization
+    if (localStorage.getItem('theme') === 'light') {
+        document.body.classList.add('light-theme');
+        themeCheckbox.checked = true;
+    } else {
+        document.body.classList.remove('light-theme');
+        themeCheckbox.checked = false;
+    }
+    
+    themeCheckbox.addEventListener('change', () => {
+        if (themeCheckbox.checked) {
+            document.body.classList.add('light-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.body.classList.remove('light-theme');
+            localStorage.setItem('theme', 'dark');
+        }
+    });
+
+    // CSV Exporter
+    function exportFilteredToCSV() {
+        const csvRows = [];
+        // Add UTF-8 BOM to display accented characters correctly in Excel
+        csvRows.push('\ufeffDate,Type,Link,Description');
+        
+        let exportCount = 0;
+        releaseNotes.forEach(group => {
+            group.updates.forEach(update => {
+                const matchesType = activeFilter === 'all' || update.type.toLowerCase() === activeFilter;
+                const query = searchQuery.trim().toLowerCase();
+                const matchesSearch = !query || 
+                    update.type.toLowerCase().includes(query) || 
+                    update.text.toLowerCase().includes(query) || 
+                    group.date.toLowerCase().includes(query);
+                    
+                if (matchesType && matchesSearch) {
+                    exportCount++;
+                    // Clean descriptions and escape quotes
+                    const cleanDate = group.date.replace(/"/g, '""');
+                    const cleanType = update.type.replace(/"/g, '""');
+                    const cleanLink = (group.link || '').replace(/"/g, '""');
+                    const cleanText = update.text.replace(/"/g, '""');
+                    
+                    csvRows.push(`"${cleanDate}","${cleanType}","${cleanLink}","${cleanText}"`);
+                }
+            });
+        });
+        
+        if (exportCount === 0) {
+            alert('No release notes match the current filters to export.');
+            return;
+        }
+        
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `bigquery_release_notes_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    btnExport.addEventListener('click', exportFilteredToCSV);
 
     // Kickoff application loading
     fetchReleaseNotes(false);
